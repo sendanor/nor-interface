@@ -1,6 +1,6 @@
 {
   "name": "nor-interface",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "User Interface module for Sendanor REST services",
   "main": "src/index.js",
   "scripts": {

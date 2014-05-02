@@ -19,6 +19,10 @@ var converters = {
 	'percent'  : function(x) { return smart.parsePercent(x); },
 	'boolean'  : function(x) { return !!(x); }
 };
+
+/** Constructor for an instance to indicate this field should be handled like invalid input field */
+function FormInputFailed() {
+}
 		
 /** Returns the keys that failed in JSON Schema */
 function collect_failed_keys(data, schema) {
@@ -36,7 +40,7 @@ function collect_failed_keys(data, schema) {
 		var value = data[key];
 		var key_schema =  schema.properties[key];
 		if(!is.object(key_schema)) {
-			debug.warn('Warning! No schema for property ' + key);
+			debug.warn('No schema for property ' + key);
 			return;
 		}
 		debug.assert(key_schema).is('object');
@@ -51,22 +55,34 @@ function collect_failed_keys(data, schema) {
 	return failed_keys;
 }
 
+/** Toggle `input-error` classes on specific properties in `keys` array */
+function toggle_error_classes(keys, input_map) {
+	debug.assert(keys).is('array');
+	debug.assert(input_map).is('object');
+	return keys.map(function(key) {
+		if(input_map[key]) {
+			input_map[key].toggleClass("input-error");
+		}
+		return key;
+	});
+}
+
 /** Toggle `input-error` classes on input fields which failed according to the JSON schema */
-function toggle_error_classes(data, schema, input_map) {
+function toggle_error_classes_by_schema(data, schema, input_map) {
 	debug.assert(data).is('object');
 	debug.assert(schema).is('object');
 	debug.assert(input_map).is('object');
 
 	var result = tv4.validateMultiple(data, schema);
 	if(result.valid) {
-		return false;
+		return [];
 	}
-	collect_failed_keys(data, schema).forEach(function(key){
-		if(input_map[key]) {
-			input_map[key].toggleClass("input-error");
-		}
-	});
-	return true;
+
+	debug.info('JSON schema validation failed!');
+	debug.log('schema =' , schema);
+	debug.log('data =' , data);
+
+	return toggle_error_classes(collect_failed_keys(data, schema), input_map);
 }
 
 /** Change property value in an object by user defined key
@@ -146,6 +162,8 @@ var parse_form = module.exports = function parse_form(form, opts) {
 			}
 		});
 
+		debug.log('input_map = ', Object.keys(input_map));
+
 		return data;
 	}).then(function(data) {
 
@@ -163,21 +181,34 @@ var parse_form = module.exports = function parse_form(form, opts) {
 		});
 
 	}).then(function(data) {
+
+		// Toggle failed properties
+		var failed_keys = Object.keys(data).filter(function(key) {
+			return data[key] instanceof FormInputFailed;
+		});
+		
 		// JSON schema validation
 		if(nopg_type && is.obj(opts.types[nopg_type]) && (opts.types[nopg_type].$schema !== undefined)) {
 			//debug.log( "nopg_type = ", nopg_type );
 			//debug.log( "opts.types[nopg_type] = ", opts.types[nopg_type] );
-			if(toggle_error_classes(data, opts.types[nopg_type].$schema, input_map)) {
-				debug.log('schema =' , opts.types[nopg_type].$schema);
-				debug.log('data =' , data);
-				throw new TypeError("JSON Schema validation failed");
-			}
+			failed_keys = failed_keys.concat(collect_failed_keys(data, opts.types[nopg_type].$schema));
 		}
-	
+
 		// FIXME: Implement support for .$validate
-		
+
+		// If we got errors let's abort here.
+		if(failed_keys.length !== 0) {
+			toggle_error_classes(failed_keys, input_map);
+			throw new TypeError("Input parsing failed for keys: " + failed_keys.join(', '));
+		}
+
 		return data;
 	});
+};
+
+/** This can be used for example in the postProcessing to indicate specific field should be handled as failed input */
+parse_form.fail = function() {
+	return new FormInputFailed();
 };
 
 /* EOF */
