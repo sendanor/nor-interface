@@ -144,6 +144,11 @@ var parse_form = module.exports = function parse_form(form, opts) {
 				value = $(this).is(':checked');
 			}
 	
+			// Ignore unchecked radio buttons
+			if( (type === 'radio') && (!$(this).is(':checked')) ) {
+				return;
+			}
+	
 			var datatype = $(this).attr('data-type') || default_datatype;
 		
 			if(typeof converters[datatype] === 'function') {
