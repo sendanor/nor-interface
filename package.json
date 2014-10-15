@@ -1,6 +1,6 @@
 {
   "name": "nor-interface",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "User Interface module for Sendanor REST services",
   "main": "src/index.js",
   "scripts": {
@@ -28,7 +28,7 @@
     "nor-debug"  : ">= 0.1.43 < 0.2.0",
     "nor-is"     : ">= 0.1.14 < 0.2.0",
     "nor-data"   : ">= 0.0.12  < 0.1.0",
-    "nor-date"   : ">= 0.1.15 < 0.2.0",
+    "nor-date"   : ">= 0.1.16 < 0.2.0",
     "q"          : ">= 1.0.1  < 1.1.0",
     "tv4"        : ">= 1.0.18 < 1.1.0",
     "jquery"     : ">= 1.11.1 < 2.0.0"
