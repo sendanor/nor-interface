@@ -2,10 +2,11 @@
 
 "use strict";
 
+var ARRAY = require('nor-array');
 var _Q = require('q');
 var tv4 = require('tv4');
 var $ = require('jquery');
-var copy = require('nor-data').copy;
+//var copy = require('nor-data').copy;
 var is = require('nor-is');
 var debug = require('nor-debug');
 var smart = require('./smart.js');
@@ -23,7 +24,7 @@ var converters = {
 /** Constructor for an instance to indicate this field should be handled like invalid input field */
 function FormInputFailed() {
 }
-		
+
 /** Returns the keys that failed in JSON Schema */
 function collect_failed_keys(data, schema) {
 	debug.assert(data).is('object');
@@ -35,10 +36,10 @@ function collect_failed_keys(data, schema) {
 	//debug.log('data = ' , data);
 	//debug.log('schema = ' , schema);
 
-	Object.keys(data).forEach(function(key){
+	ARRAY(Object.keys(data)).forEach(function(key){
 		debug.assert(key).is('string');
 		var value = data[key];
-		var key_schema =  schema.properties[key];
+		var key_schema = schema.properties[key];
 		if(!is.object(key_schema)) {
 			debug.warn('No schema for property ' + key);
 			return;
@@ -59,15 +60,16 @@ function collect_failed_keys(data, schema) {
 function toggle_error_classes(keys, input_map) {
 	debug.assert(keys).is('array');
 	debug.assert(input_map).is('object');
-	return keys.map(function(key) {
+	return ARRAY(keys).map(function(key) {
 		if(input_map[key]) {
 			input_map[key].toggleClass("input-error");
 		}
 		return key;
-	});
+	}).valueOf();
 }
 
 /** Toggle `input-error` classes on input fields which failed according to the JSON schema */
+/*
 function toggle_error_classes_by_schema(data, schema, input_map) {
 	debug.assert(data).is('object');
 	debug.assert(schema).is('object');
@@ -84,6 +86,7 @@ function toggle_error_classes_by_schema(data, schema, input_map) {
 
 	return toggle_error_classes(collect_failed_keys(data, schema), input_map);
 }
+*/
 
 /** Change property value in an object by user defined key
  * @param data {object} The object which will be changed
@@ -117,7 +120,7 @@ var parse_form = module.exports = function parse_form(form, opts) {
 	opts.types = opts.types || {};
 	debug.assert(opts.types).is('object');
 
-	var tmp;
+//	var tmp;
 	var input_map = {};
 	var nopg_type = $(form).attr('data-nopg-type');
 
@@ -134,11 +137,11 @@ var parse_form = module.exports = function parse_form(form, opts) {
 			var key = $(this).attr('name') || id;
 			var value = $(this).val();
 			input_map[key] = $(this);
-	
+
 			$(this).removeClass("input-error");
-			
+
 			var default_datatype = 'string';
-				
+
 			if(type === 'checkbox') {
 				default_datatype = 'boolean';
 				value = $(this).is(':checked');
@@ -148,9 +151,9 @@ var parse_form = module.exports = function parse_form(form, opts) {
 			if( (type === 'radio') && (!$(this).is(':checked')) ) {
 				return;
 			}
-	
+
 			var datatype = $(this).attr('data-type') || default_datatype;
-		
+
 			if(typeof converters[datatype] === 'function') {
 				value = converters[datatype](value);
 			} else {
@@ -188,15 +191,15 @@ var parse_form = module.exports = function parse_form(form, opts) {
 	}).then(function(data) {
 
 		// Toggle failed properties
-		var failed_keys = Object.keys(data).filter(function(key) {
+		var failed_keys = ARRAY(Object.keys(data)).filter(function(key) {
 			return data[key] instanceof FormInputFailed;
-		});
-		
+		}).valueOf();
+
 		// JSON schema validation
 		if(nopg_type && is.obj(opts.types[nopg_type]) && (opts.types[nopg_type].$schema !== undefined)) {
 			//debug.log( "nopg_type = ", nopg_type );
 			//debug.log( "opts.types[nopg_type] = ", opts.types[nopg_type] );
-			failed_keys = failed_keys.concat(collect_failed_keys(data, opts.types[nopg_type].$schema));
+			failed_keys = ARRAY(failed_keys).concat(collect_failed_keys(data, opts.types[nopg_type].$schema)).valueOf();
 		}
 
 		// FIXME: Implement support for .$validate

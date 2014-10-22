@@ -4,7 +4,7 @@
 
 "use strict";
 
-var debug = require('nor-debug');
+//var debug = require('nor-debug');
 var is = require('nor-is');
 
 /** Parse integers */
@@ -27,10 +27,10 @@ function parseSmartNumber(s) {
 	s = ''+s;
 
 	// Turn numbers like "10,20" to "10.20"
-	if(s.indexOf(',') != -1) {
+	if(s.indexOf(',') !== -1) {
 		s = s.split(',').join('.');
 	}
-	
+
 	if (/^([0-9]+(\.[0-9]*)?) *% *$/.test(s)) {
 		return parseFloat(s) / 100.0;
 	}
